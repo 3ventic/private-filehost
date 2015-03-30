@@ -1,7 +1,9 @@
 # private-filehost
 The code behind i.3v.fi
 
-# Required Nginx server block configuration
+# Nginx server block configuration
+
+(Apache/other webserver equivalent should do too, perhaps even in .htaccess. Feel free to create a pull request if you create one)
 
 ```
 	
