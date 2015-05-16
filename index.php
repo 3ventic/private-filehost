@@ -1,6 +1,6 @@
 <?php
 // Base URL of the website
-$baseurl = "https://i.3v.fi/";
+$baseurl = "";
 
 // Twitter handle for twitter card
 $twitter = "";
@@ -8,23 +8,20 @@ $twitter = "";
 // Google Analytics tracking code (or some other thing to add on every page)
 $analytics = <<<EOD
 
-<script>
-
-</script>
-
 EOD;
 
-if (!array_key_exists('file', $_GET)) {
-    die("Error");
+if (!array_key_exists('file', $_GET) || !array_key_exists('type', $_GET)) {
+    die("Missing file $analytics");
 }
 else if (preg_match('/^[^.]+$/', $_GET['file']) != 1 || (!file_exists($_GET['file'].'.'.$_GET['type']))) {
     header("HTTP/1.1 404 Not Found", true, 404);
-    die("Not found");
+    die("Not found $analytics");
 }
 
 
 $contentType;
-switch($_GET['type']) {
+switch($_GET['type'])
+{
     case "txt": $contentType = "text/plain"; break;
     case "json": $contentType = "application/json"; break;
     default: $contentType = getMimeFromType($_GET['file'] . '.' . $_GET['type']);
@@ -89,6 +86,15 @@ EOD;
 EOD;
 
 }
+else if (in_array($contentType, ["text/plain", "application/json"]) || startsWith($contentType, "text/"))
+{
+    // Code highlight
+    $c = file_get_contents($_GET['file'] . '.' . $_GET['type']);
+    $content = "";
+    if (startsWith($c, "#")) $content .= "<button id=\"toggle-source\">Show as markdown</button>";
+    $content .= "<div id=\"source\" style=\"display:block\"><pre><code id=\"source-code\">" . htmlspecialchars($c). "</code></pre></div>";
+    if (startsWith($c, "#")) $content .= "<div id=\"parsed\" style=\"display:none\"></div>";
+}
 else
 {
     sendRawFile($contentType);
@@ -127,29 +133,10 @@ function sendRawFile($contentType)
 <html>
     <head>
         <title><?=$_GET['file'].'.'.$_GET['type']?></title>
+        <meta name=viewport content="width=device-width, initial-scale=1">
         <style>
-        body {
-            background-color: #262626;
-            margin: 0;
-            padding: 0;
-            text-align: center;
-            color: #fff;
-        }
-        video {
-            background-color: #000;
-        }
-        video, img {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            display: block;
-            margin: auto;
-            text-align: center;
-            max-height: 90%;
-            max-width: 100%;
-        }
+        body{background-color:#262626;margin:0;padding:0;text-align:center;color:#fff;tab-size:4}video{background-color:#000}img,video{position:absolute;top:0;bottom:0;left:0;right:0;display:block;margin:auto;text-align:center;max-height:90%;max-width:100%}pre{text-align:left}
+        #parsed{text-align:left;font-family:Georgia,Cambria,serif;padding:1em;color:#ccc}#parsed h1,#parsed h2,#parsed h3{margin-top:3em}a{color:#93c763}p code,ul code{color:#F2BBA5}
         </style>
         <?=$twittercard?>
     </head>
@@ -157,5 +144,39 @@ function sendRawFile($contentType)
         <?=$contentHeader?>
         <?=$content?>
         <?=$analytics?>
+        <script src="/highlightjs/highlight.pack.js"></script>
+        <script src="/static/markdown.min.js"></script>
+        <script type="text/javascript">
+        var p = document.getElementById('parsed');
+        var s = document.getElementById('source');
+        var state = true;
+        if (p && s)
+        {
+            var e = document.getElementById('source-code');
+            p.innerHTML = markdown.toHTML(e.innerText || e.textContent);
+        }
+        document.getElementById('toggle-source').onclick = function ()
+        {
+            if (state)
+            {
+                p.style.display = "block";
+                s.style.display = "none";
+            }
+            else
+            {
+                p.style.display = "none";
+                s.style.display = "block";
+            }
+            state = !state;
+        }
+        </script>
+        <script type="text/javascript">
+        hljs.initHighlightingOnLoad();
+        var hlstyle = document.createElement("link");
+        hlstyle.setAttribute("rel", "stylesheet");
+        hlstyle.setAttribute("type", "text/css");
+        hlstyle.setAttribute("href", "/highlightjs/styles/obsidian.min.css");
+        document.getElementsByTagName("head")[0].appendChild(hlstyle);
+        </script>
     </body>
 </html>
