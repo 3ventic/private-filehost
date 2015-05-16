@@ -28,6 +28,11 @@ The code behind i.3v.fi
 
 ```
 
+# 3rd party requirements
+
+- [highlight.js](http://highlightjs.org/) (uses obsidian style)
+- [markdown-js](https://github.com/evilstreak/markdown-js/releases)
+
 # Optional cronjob
 
 Generates mp4 videos for all gif-files uploaded and vice-versa, checks every 2 minutes.
