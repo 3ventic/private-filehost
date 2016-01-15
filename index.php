@@ -74,14 +74,21 @@ else if (startsWith($contentType, "image/"))
         </script>
     
 EOD;
-    
+    $contentTypeShort = explode('/', $contentType)[0];
+    $contentTypePlain = explode(';', $contentType)[0];
     $twittercard = <<<EOD
-        <meta name="twitter:card" content="photo" />
+        <meta property="og:site_name" content="3v.fi" />
+        <meta property="og:url" content="$baseurl{$_GET['file']}.{$_GET['type']}" />
+        <meta property="og:title" content="3v.fi image {$_GET['file']}" />
+        <meta property="og:type" content="$contentTypeShort" />
+        <meta property="og:description" content="Image by $twitter" />
+        <meta property="og:$contentTypeShort" content="{$baseurl}raw/{$_GET['file']}.{$_GET['type']}" />
+        <meta property="og:$contentTypeShort:width" content="$width" />
+        <meta property="og:$contentTypeShort:height" content="$height" />
+        <meta property="og:$contentTypeShort:type" content="$contentTypePlain" />
+        <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="$twitter" />
-        <meta name="twitter:title" content="{$_GET['file']}" />
-        <meta name="twitter:description" content="Image by $twitter" />
-        <meta name="twitter:image" content="{$baseurl}raw/{$_GET['file']}.{$_GET['type']}" />
-        <meta name="twitter:url" content="$baseurl{$_GET['file']}.{$_GET['type']}" />
+        <meta name="twitter:creator" content="$twitter" />
         
 EOD;
 
@@ -91,9 +98,9 @@ else if (in_array($contentType, ["text/plain", "application/json"]) || startsWit
     // Code highlight
     $c = file_get_contents($_GET['file'] . '.' . $_GET['type']);
     $content = "";
-    if (startsWith($c, "#")) $content .= "<button id=\"toggle-source\">Show as markdown</button>";
+    if (startsWith($c, "# ")) $content .= "<button id=\"toggle-source\">Toggle markdown source</button>";
     $content .= "<div id=\"source\" style=\"display:block\"><pre><code id=\"source-code\">" . htmlspecialchars($c). "</code></pre></div>";
-    if (startsWith($c, "#")) $content .= "<div id=\"parsed\" style=\"display:none\"></div>";
+    if (startsWith($c, "# ")) $content .= "<div id=\"parsed\" style=\"display:none\"></div>";
 }
 else
 {
@@ -155,7 +162,10 @@ function sendRawFile($contentType)
             var e = document.getElementById('source-code');
             p.innerHTML = markdown.toHTML(e.innerText || e.textContent);
         }
-        document.getElementById('toggle-source').onclick = function ()
+        var b=document.getElementById('toggle-source');
+        if (b) md();
+        b.onclick = md;
+        function md()
         {
             if (state)
             {
@@ -169,14 +179,14 @@ function sendRawFile($contentType)
             }
             state = !state;
         }
-        </script>
-        <script type="text/javascript">
-        hljs.initHighlightingOnLoad();
-        var hlstyle = document.createElement("link");
-        hlstyle.setAttribute("rel", "stylesheet");
-        hlstyle.setAttribute("type", "text/css");
-        hlstyle.setAttribute("href", "/highlightjs/styles/obsidian.min.css");
-        document.getElementsByTagName("head")[0].appendChild(hlstyle);
+        if (hljs) {
+            hljs.initHighlightingOnLoad();
+            var hlstyle = document.createElement("link");
+            hlstyle.setAttribute("rel", "stylesheet");
+            hlstyle.setAttribute("type", "text/css");
+            hlstyle.setAttribute("href", "/highlightjs/styles/obsidian.min.css");
+            document.getElementsByTagName("head")[0].appendChild(hlstyle);
+        }
         </script>
     </body>
 </html>
