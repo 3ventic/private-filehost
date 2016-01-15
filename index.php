@@ -163,8 +163,10 @@ function sendRawFile($contentType)
             p.innerHTML = markdown.toHTML(e.innerText || e.textContent);
         }
         var b=document.getElementById('toggle-source');
-        if (b) md();
-        b.onclick = md;
+        if (b) {
+            md();
+            b.onclick = md;
+        }
         function md()
         {
             if (state)
